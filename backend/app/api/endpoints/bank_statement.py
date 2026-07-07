@@ -23,6 +23,22 @@ def create_demo_project() -> dict:
     return {"code": 0, "message": "success", "data": bank_statement_service.create_demo_project()}
 
 
+@router.post("/projects/upload-task")
+def create_upload_task(file_name: str = "statement-demo.zip") -> dict:
+    """创建文件上传、解压和解析队列任务."""
+    return {"code": 0, "message": "success", "data": bank_statement_service.create_upload_task(file_name)}
+
+
+@router.post("/projects/{project_id}/engineering-pipeline")
+def run_engineering_pipeline(project_id: int, file_name: str = "statement-demo.zip") -> dict:
+    """运行工程化流水解析全链路演示."""
+    return {
+        "code": 0,
+        "message": "success",
+        "data": bank_statement_service.run_engineering_pipeline(project_id, file_name),
+    }
+
+
 @router.get("/projects/{project_id}")
 def get_project(project_id: int) -> dict:
     """获取流水项目详情.
@@ -103,3 +119,21 @@ def get_report(project_id: int) -> dict:
 def get_report_details(project_id: int, label: str = "all") -> dict:
     """获取报告抽屉明细."""
     return {"code": 0, "message": "success", "data": bank_statement_service.get_detail_rows(project_id, label)}
+
+
+@router.get("/workflow-tasks")
+def list_workflow_tasks() -> dict:
+    """获取流水解析状态机任务列表."""
+    return {"code": 0, "message": "success", "data": bank_statement_service.list_workflow_tasks()}
+
+
+@router.get("/review-records")
+def list_review_records(project_id: int | None = None) -> dict:
+    """获取流水解析复核记录."""
+    return {"code": 0, "message": "success", "data": bank_statement_service.list_review_records(project_id)}
+
+
+@router.get("/audit-summary")
+def get_audit_summary() -> dict:
+    """获取流水解析审计日志、调用计数和队列状态."""
+    return {"code": 0, "message": "success", "data": bank_statement_service.audit_summary()}

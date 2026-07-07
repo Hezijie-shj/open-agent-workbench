@@ -21,6 +21,24 @@ The backend keeps the same kind of layering used in a SaaS agent system:
 - Agents hold the business workflow and return structured results.
 - Configuration lives under `config/*.toml`.
 
+## Public Engineering Skeleton
+
+The repository includes a public-safe backend infrastructure skeleton under `backend/app/platform`.
+
+| Component | Responsibility |
+| --- | --- |
+| `file_pipeline.py` | Upload metadata, archive extraction, PDF page splitting, page rendering, blank/error page classification. |
+| `ocr.py` | OCR text blocks, bounding boxes, confidence values, text cleanup. |
+| `model_gateway.py` | Prompt name tracking, model call simulation, retry metadata, sensitive-output fallback. |
+| `parsers.py` | CSV/JSON parsing, field normalization, amount and balance validation. |
+| `repository.py` | In-memory task records, transaction rollback, pagination, filters, state machine, review records. |
+| `queue.py` | Local queue and async-worker behavior simulation. |
+| `storage.py` | Local object metadata, checksums, storage keys. |
+| `audit.py` | Tenant context, audit events, usage counters, billing placeholder. |
+| `reporting.py` | Report metadata, template descriptor, JSON/DOCX/PDF download descriptors. |
+
+These components deliberately avoid real OCR vendors, model gateways, object storage, database credentials, internal hosts, or business files. They show where those adapters would live in a real SaaS deployment.
+
 ## Agent 1: Bank Statement Analysis
 
 Module path:
@@ -31,6 +49,43 @@ backend/app/api/endpoints/bank_statement.py
 ```
 
 This agent models a bank-statement SaaS workflow: upload, full PDF recognition, single-page recognition, review, report generation, report details, and sensitive-output fallback.
+
+### Engineering Pipeline
+
+Endpoint:
+
+```text
+POST /api/v1/bank_statement/projects/{project_id}/engineering-pipeline
+```
+
+Flow:
+
+```text
+upload statement archive
+  -> store object metadata and checksum
+  -> extract archive into PDF/CSV children
+  -> split PDF into pages
+  -> render page images
+  -> classify blank/error pages
+  -> extract OCR blocks and bounding boxes
+  -> run structured model task with retry metadata
+  -> parse CSV/JSON rows
+  -> normalize amount fields
+  -> validate balance continuity
+  -> run sensitive-output fallback
+  -> persist task state and review record
+  -> build report download descriptors
+  -> write audit event and usage counter
+```
+
+Extra endpoints:
+
+```text
+POST /api/v1/bank_statement/projects/upload-task
+GET  /api/v1/bank_statement/workflow-tasks
+GET  /api/v1/bank_statement/review-records
+GET  /api/v1/bank_statement/audit-summary
+```
 
 ### Full PDF Flow
 
@@ -126,6 +181,40 @@ backend/app/api/endpoints/regulations.py
 
 This agent models a regulation/policy comparison workflow: source document loading, knowledge-base comparison documents, task creation, document comparison, result persistence, text matching, and highlight fallback.
 
+### Engineering Pipeline
+
+Endpoint:
+
+```text
+POST /api/v1/regulations/tasks/{task_id}/engineering-pipeline
+```
+
+Flow:
+
+```text
+upload source regulation
+  -> store source metadata and checksum
+  -> load local rule-library files
+  -> extract PDF/DOCX/TXT paragraphs
+  -> run semantic comparison task with retry metadata
+  -> parse JSON risk items
+  -> normalize clause, risk level, suggestion fields
+  -> locate matching text and highlight ranges
+  -> repair truncated or weak matches through fallback search
+  -> persist task state and review record
+  -> build risk report descriptors
+  -> write audit event and usage counter
+```
+
+Extra endpoints:
+
+```text
+POST /api/v1/regulations/tasks/upload-task
+GET  /api/v1/regulations/workflow-tasks
+GET  /api/v1/regulations/review-records
+GET  /api/v1/regulations/audit-summary
+```
+
 ### Full Regulation Compare Flow
 
 Endpoint:
@@ -206,6 +295,41 @@ backend/app/api/endpoints/document_diff.py
 ```
 
 This agent models a document-diff workflow: create comparison task, save history, poll task status, request preview authorization, load diff detail, and run a local line-level fallback diff.
+
+### Engineering Pipeline
+
+Endpoint:
+
+```text
+POST /api/v1/document_diff/engineering-pipeline
+```
+
+Flow:
+
+```text
+upload standard and compare documents
+  -> store object metadata and checksums
+  -> validate file roles and formats
+  -> extract document text and line counts
+  -> create comparison task
+  -> enqueue status polling job
+  -> poll task status and sync history
+  -> summarize clause-level differences
+  -> generate preview link descriptor
+  -> run local line-diff fallback
+  -> persist task state and review record
+  -> build report download descriptors
+  -> write audit event and usage counter
+```
+
+Extra endpoints:
+
+```text
+POST /api/v1/document_diff/history/upload-task
+GET  /api/v1/document_diff/workflow-tasks
+GET  /api/v1/document_diff/review-records
+GET  /api/v1/document_diff/audit-summary
+```
 
 ### Create Comparison Task
 

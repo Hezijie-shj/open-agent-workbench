@@ -27,6 +27,14 @@ class BankStatementService:
         """创建本地演示项目."""
         return bank_statement_agent.create_demo_project()
 
+    def create_upload_task(self, file_name: str = "statement-demo.zip") -> dict:
+        """创建上传解析任务."""
+        return bank_statement_agent.create_upload_task(file_name)
+
+    def run_engineering_pipeline(self, project_id: int, file_name: str = "statement-demo.zip") -> dict:
+        """运行完整工程化流水解析流程."""
+        return bank_statement_agent.run_engineering_pipeline(project_id, file_name)
+
     def mark_reviewed(self, project_id: int) -> dict | None:
         """标记项目复核完成."""
         return bank_statement_agent.mark_reviewed(project_id)
@@ -69,6 +77,18 @@ class BankStatementService:
     def get_detail_rows(self, project_id: int, label: str) -> list[dict]:
         """获取报告抽屉明细."""
         return bank_statement_agent.detail_rows(project_id, label)
+
+    def list_workflow_tasks(self) -> dict:
+        """获取流水解析任务状态列表."""
+        return bank_statement_agent.list_workflow_tasks()
+
+    def list_review_records(self, project_id: int | None = None) -> list[dict]:
+        """获取复核记录."""
+        return bank_statement_agent.list_review_records(project_id)
+
+    def audit_summary(self) -> dict:
+        """获取审计与调用计数."""
+        return bank_statement_agent.audit_summary()
 
 
 bank_statement_service = BankStatementService()

@@ -23,10 +23,28 @@ def create_demo_task() -> dict:
     return {"code": 0, "message": "success", "data": regulations_service.create_demo_task()}
 
 
+@router.post("/tasks")
+def create_task() -> dict:
+    """创建制度比对任务."""
+    return {"code": 0, "message": "success", "data": regulations_service.create_demo_task()}
+
+
 @router.post("/tasks/upload-demo")
 def upload_demo_task() -> dict:
     """上传示例文档并创建本地演示任务."""
     return {"code": 0, "message": "success", "data": regulations_service.create_demo_task(uploaded=True)}
+
+
+@router.post("/tasks/{task_id}/upload-demo")
+def upload_demo_file(task_id: int) -> dict:
+    """为指定制度任务上传示例文档."""
+    return {"code": 0, "message": "success", "data": regulations_service.run_engineering_pipeline(task_id)}
+
+
+@router.post("/tasks/upload-task")
+def create_upload_task(file_name: str = "origin-policy-demo.pdf") -> dict:
+    """创建制度文档上传和比对队列任务."""
+    return {"code": 0, "message": "success", "data": regulations_service.create_upload_task(file_name)}
 
 
 @router.get("/tasks/{task_id}")
@@ -52,6 +70,12 @@ def get_compare_workflow(task_id: int) -> dict:
     return {"code": 0, "message": "success", "data": regulations_service.compare_documents_workflow(task_id)}
 
 
+@router.post("/tasks/{task_id}/engineering-pipeline")
+def run_engineering_pipeline(task_id: int, file_name: str = "origin-policy-demo.pdf") -> dict:
+    """运行工程化制度文档比对全链路演示."""
+    return {"code": 0, "message": "success", "data": regulations_service.run_engineering_pipeline(task_id, file_name)}
+
+
 @router.get("/tasks/{task_id}/single-document-compare")
 def get_single_document_compare(task_id: int, compare_file: str = "rule-library-demo.pdf") -> dict:
     """获取单文档比对流程演示结果."""
@@ -66,3 +90,21 @@ def get_single_document_compare(task_id: int, compare_file: str = "rule-library-
 def get_text_match_fallback(task_id: int) -> dict:
     """获取文本定位和截断兜底流程演示结果."""
     return {"code": 0, "message": "success", "data": regulations_service.text_match_fallback(task_id)}
+
+
+@router.get("/workflow-tasks")
+def list_workflow_tasks() -> dict:
+    """获取制度比对状态机任务列表."""
+    return {"code": 0, "message": "success", "data": regulations_service.list_workflow_tasks()}
+
+
+@router.get("/review-records")
+def list_review_records(task_id: int | None = None) -> dict:
+    """获取制度比对复核记录."""
+    return {"code": 0, "message": "success", "data": regulations_service.list_review_records(task_id)}
+
+
+@router.get("/audit-summary")
+def get_audit_summary() -> dict:
+    """获取制度比对审计日志、调用计数和队列状态."""
+    return {"code": 0, "message": "success", "data": regulations_service.audit_summary()}

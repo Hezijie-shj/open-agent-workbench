@@ -19,10 +19,22 @@ def create_demo_task() -> dict:
     return {"code": 0, "message": "success", "data": document_diff_service.create_demo_task()}
 
 
+@router.post("/history/upload-task")
+def create_upload_task() -> dict:
+    """创建多文档上传和比对队列任务."""
+    return {"code": 0, "message": "success", "data": document_diff_service.create_upload_task()}
+
+
 @router.post("/compare-documents")
 def compare_documents() -> dict:
     """创建文档差异比对任务."""
     return {"code": 0, "message": "success", "data": document_diff_service.compare_documents()}
+
+
+@router.post("/engineering-pipeline")
+def run_engineering_pipeline() -> dict:
+    """运行工程化文档差异比对全链路演示."""
+    return {"code": 0, "message": "success", "data": document_diff_service.run_engineering_pipeline()}
 
 
 @router.get("/history/{task_id}")
@@ -59,3 +71,21 @@ def local_line_diff(task_id: str) -> dict:
     if not result:
         raise HTTPException(status_code=404, detail="document diff task not found")
     return {"code": 0, "message": "success", "data": result}
+
+
+@router.get("/workflow-tasks")
+def list_workflow_tasks() -> dict:
+    """获取文档差异状态机任务列表."""
+    return {"code": 0, "message": "success", "data": document_diff_service.list_workflow_tasks()}
+
+
+@router.get("/review-records")
+def list_review_records(task_id: str | None = None) -> dict:
+    """获取文档差异复核记录."""
+    return {"code": 0, "message": "success", "data": document_diff_service.list_review_records(task_id)}
+
+
+@router.get("/audit-summary")
+def get_audit_summary() -> dict:
+    """获取文档差异审计日志、调用计数和队列状态."""
+    return {"code": 0, "message": "success", "data": document_diff_service.audit_summary()}

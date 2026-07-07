@@ -1,6 +1,14 @@
 """Local regulation comparison workflow for the public demo boundary."""
 
 from app.mock_data import REGULATION_TASKS
+from app.platform.audit import audit_ledger
+from app.platform.context import demo_context
+from app.platform.file_pipeline import file_pipeline
+from app.platform.model_gateway import model_gateway
+from app.platform.parsers import structured_parser
+from app.platform.queue import task_queue
+from app.platform.reporting import report_builder
+from app.platform.repository import WorkflowTask, repository
 
 
 class RegulationsAgent:
@@ -22,6 +30,29 @@ class RegulationsAgent:
         }
         REGULATION_TASKS.insert(0, task)
         return task
+
+    def create_upload_task(self, file_name: str = "origin-policy-demo.pdf") -> dict:
+        """Create an uploaded regulation task and queue comparison."""
+
+        context = demo_context()
+        task = self.create_demo_task(uploaded=True)
+        upload = file_pipeline.upload_demo_file(file_name, "regulations")
+        queue_job = task_queue.enqueue("regulations", "compare_regulation", task_id=task["id"], file_name=file_name)
+        saved = repository.save_task(
+            WorkflowTask(
+                task_id=f"reg-{task['id']:04d}",
+                module="regulations",
+                status="queued",
+                title=task["name"],
+                tenant_id=context.tenant_id,
+                operator=context.operator,
+                current_step="uploaded",
+                progress=15,
+                payload={"task": task, "upload": upload, "queue_job": queue_job},
+            )
+        )
+        audit_ledger.record("regulations", "upload_document", context.tenant_id, context.operator, task_id=task["id"])
+        return saved
 
     def get_task(self, task_id: int) -> dict | None:
         task = next((item for item in REGULATION_TASKS if item["id"] == task_id), None)
@@ -54,6 +85,7 @@ class RegulationsAgent:
             "mode": "full_document_compare",
             "status": "completed",
             "workflow": [
+                {"key": "upload_origin", "name": "制度文件上传与对象存储", "status": "completed"},
                 {"key": "download_origin", "name": "下载源制度文件", "status": "completed"},
                 {
                     "key": "load_knowledge_base",
@@ -64,9 +96,12 @@ class RegulationsAgent:
                 {"key": "download_compare_files", "name": "下载比对文件并建立本地缓存", "status": "completed"},
                 {"key": "create_task_record", "name": "创建比对任务记录", "status": "completed"},
                 {"key": "extract_text", "name": "提取 PDF/DOCX/TXT 文本", "status": "completed"},
+                {"key": "prompt_compare", "name": "比对提示词模板与模型重试", "status": "completed"},
                 {"key": "compare_each_document", "name": "逐文件调用比对 Agent", "status": "completed"},
+                {"key": "parse_json", "name": "JSON 解析、字段标准化和风险分级", "status": "completed"},
                 {"key": "save_result", "name": "保存比对结果", "status": "completed"},
                 {"key": "highlight_document", "name": "生成定位与高亮信息", "status": "completed"},
+                {"key": "audit_usage", "name": "审计日志与调用计数", "status": "completed"},
             ],
             "comparison_results": [
                 {
@@ -84,6 +119,89 @@ class RegulationsAgent:
             ],
             "success_count": 2,
             "fail_count": 0,
+        }
+
+    def run_engineering_pipeline(self, task_id: int, file_name: str = "origin-policy-demo.pdf") -> dict:
+        """Run the full public demo regulation comparison pipeline."""
+
+        context = demo_context()
+        task = self.get_task(task_id) or self.create_demo_task(uploaded=True)
+        upload = file_pipeline.upload_demo_file(file_name, "regulations")
+        compare_files = ["rule-library-demo.pdf", "operation-guideline-demo.docx"]
+        extracted_text = [
+            {
+                "file_name": file_name,
+                "role": "origin",
+                "paragraph_count": 36,
+                "checksum": upload["checksum"],
+            },
+            *[
+                {
+                    "file_name": compare_file,
+                    "role": "knowledge_base",
+                    "paragraph_count": 24 + index * 8,
+                    "checksum": f"demo-kb-{index}",
+                }
+                for index, compare_file in enumerate(compare_files, start=1)
+            ],
+        ]
+        model = model_gateway.run_structured_task(
+            "regulations",
+            "regulation_semantic_compare",
+            {"origin": extracted_text[0], "compare_files": extracted_text[1:]},
+        )
+        single = self.compare_single_document(task_id)
+        items = structured_parser.parse_json_items(single["items"])
+        fallback = self.text_match_fallback(task_id)
+        report = report_builder.build_report(
+            "regulations",
+            str(task_id),
+            f"{task['name']} 风险比对报告",
+            {"risk_count": len(items), "highlight_count": len(self.get_task(task_id)["highlights"]) if task else 0},
+            items,
+        )
+        repository.save_task(
+            WorkflowTask(
+                task_id=f"reg-{task_id:04d}",
+                module="regulations",
+                status="completed",
+                title=task["name"],
+                tenant_id=context.tenant_id,
+                operator=context.operator,
+                current_step="report_generated",
+                progress=100,
+                payload={"upload": upload, "items": items, "report": report},
+            )
+        )
+        repository.add_review_record("regulations", str(task_id), context.operator, "need_review", items)
+        audit_ledger.record(
+            "regulations",
+            "run_full_pipeline",
+            context.tenant_id,
+            context.operator,
+            task_id=task_id,
+            risk_count=len(items),
+        )
+        return {
+            "task": task,
+            "upload": upload,
+            "knowledge_base": {"files": compare_files, "source": "local_demo_rule_library"},
+            "extracted_text": extracted_text,
+            "model": model,
+            "items": items,
+            "fallback": fallback,
+            "report": report,
+            "persisted_task": repository.get_task(f"reg-{task_id:04d}"),
+            "workflow": [
+                {"key": "upload", "name": "制度文件上传与对象存储", "status": "completed"},
+                {"key": "load_rule_library", "name": "规则库文件列表读取", "status": "completed"},
+                {"key": "extract_text", "name": "PDF/DOCX/TXT 文本抽取", "status": "completed"},
+                {"key": "model_compare", "name": "模型比对、提示词模板和重试", "status": "completed"},
+                {"key": "parse_normalize", "name": "JSON 解析、字段标准化和风险分级", "status": "completed"},
+                {"key": "highlight_fallback", "name": "文本定位、高亮和截断兜底", "status": "completed"},
+                {"key": "persist_review", "name": "事务保存、复核记录和状态机", "status": "completed"},
+                {"key": "report_audit", "name": "报告输出、审计日志和调用计数", "status": "completed"},
+            ],
         }
 
     def compare_single_document(self, task_id: int, compare_file: str = "rule-library-demo.pdf") -> dict:
@@ -146,6 +264,25 @@ class RegulationsAgent:
                 "fallback": True,
                 "fallback_reason": "跨段落文本被截断, 已使用后续段落补全。",
             },
+        }
+
+    def list_workflow_tasks(self) -> dict:
+        """List persisted regulation workflow tasks."""
+
+        return repository.list_tasks(module="regulations")
+
+    def list_review_records(self, task_id: int | None = None) -> list[dict]:
+        """List regulation review records."""
+
+        return repository.list_review_records(module="regulations", subject_id=str(task_id) if task_id else None)
+
+    def audit_summary(self) -> dict:
+        """Return audit and usage summary."""
+
+        return {
+            "events": audit_ledger.list_events("regulations"),
+            "usage": audit_ledger.usage_summary(),
+            "jobs": task_queue.list_jobs("regulations"),
         }
 
 
