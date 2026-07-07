@@ -1,0 +1,72 @@
+<svg width="1280" height="620" viewBox="0 0 1280 620" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">三类 Agent 流程总览</title>
+  <desc id="desc">银行流水解析、制度文档比对、合同文档差异比对的流程图</desc>
+  <rect width="1280" height="620" rx="24" fill="#F8FAFC"/>
+  <text x="56" y="72" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">三类 Agent 流程总览</text>
+  <text x="56" y="108" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">每个 Agent 都保留任务动作、状态流转、兜底策略和结构化结果输出。</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1L9 5L1 9" fill="#64748B"/>
+    </marker>
+  </defs>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <rect x="58" y="156" width="360" height="380" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="88" y="204" fill="#065F46" font-size="25" font-weight="800">银行流水解析</text>
+    <text x="88" y="234" fill="#64748B" font-size="15">PDF 识别、复核、报告生成</text>
+    <g fill="#ECFDF5" stroke="#A7F3D0">
+      <rect x="90" y="270" width="296" height="44" rx="12"/>
+      <rect x="90" y="334" width="296" height="44" rx="12"/>
+      <rect x="90" y="398" width="296" height="44" rx="12"/>
+      <rect x="90" y="462" width="296" height="44" rx="12"/>
+    </g>
+    <g fill="#065F46" font-size="16" font-weight="700">
+      <text x="116" y="298">完整 PDF / 单页识别</text>
+      <text x="116" y="362">敏感输出兜底回填</text>
+      <text x="116" y="426">连续性与余额校验</text>
+      <text x="116" y="490">复核与报告明细</text>
+    </g>
+    <path d="M238 314V326" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M238 378V390" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M238 442V454" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="460" y="156" width="360" height="380" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="490" y="204" fill="#1D4ED8" font-size="25" font-weight="800">制度文档比对</text>
+    <text x="490" y="234" fill="#64748B" font-size="15">规则库、语义差异、高亮定位</text>
+    <g fill="#EFF6FF" stroke="#BFDBFE">
+      <rect x="492" y="270" width="296" height="44" rx="12"/>
+      <rect x="492" y="334" width="296" height="44" rx="12"/>
+      <rect x="492" y="398" width="296" height="44" rx="12"/>
+      <rect x="492" y="462" width="296" height="44" rx="12"/>
+    </g>
+    <g fill="#1D4ED8" font-size="16" font-weight="700">
+      <text x="518" y="298">读取原文与规则库</text>
+      <text x="518" y="362">完整 / 单文档比对</text>
+      <text x="518" y="426">文本匹配兜底</text>
+      <text x="518" y="490">风险项与高亮输出</text>
+    </g>
+    <path d="M640 314V326" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M640 378V390" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M640 442V454" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="862" y="156" width="360" height="380" rx="20" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="892" y="204" fill="#9A3412" font-size="25" font-weight="800">合同文档差异比对</text>
+    <text x="892" y="234" fill="#64748B" font-size="15">任务轮询、预览、行级 diff</text>
+    <g fill="#FFF7ED" stroke="#FED7AA">
+      <rect x="894" y="270" width="296" height="44" rx="12"/>
+      <rect x="894" y="334" width="296" height="44" rx="12"/>
+      <rect x="894" y="398" width="296" height="44" rx="12"/>
+      <rect x="894" y="462" width="296" height="44" rx="12"/>
+    </g>
+    <g fill="#9A3412" font-size="16" font-weight="700">
+      <text x="920" y="298">创建比对任务</text>
+      <text x="920" y="362">轮询状态并同步历史</text>
+      <text x="920" y="426">获取预览链接</text>
+      <text x="920" y="490">本地行级 diff 兜底</text>
+    </g>
+    <path d="M1042 314V326" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M1042 378V390" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+    <path d="M1042 442V454" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+</svg>

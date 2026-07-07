@@ -1,0 +1,53 @@
+<svg width="1280" height="560" viewBox="0 0 1280 560" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">后端架构图</title>
+  <desc id="desc">展示前端、API、服务层、Agent 工作流、配置和本地数据的关系</desc>
+  <rect width="1280" height="560" rx="24" fill="#F8FAFC"/>
+  <text x="56" y="72" fill="#0F172A" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="34" font-weight="800">后端架构</text>
+  <text x="56" y="108" fill="#64748B" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="18">轻量前端触发接口，后端按 SaaS Agent 边界组织业务流程。</text>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2 2L10 6L2 10" fill="#64748B"/>
+    </marker>
+  </defs>
+
+  <g font-family="Inter, Segoe UI, Arial, sans-serif">
+    <rect x="70" y="178" width="210" height="100" rx="16" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="96" y="218" fill="#0F172A" font-size="22" font-weight="700">Frontend Views</text>
+    <text x="96" y="250" fill="#64748B" font-size="15">Vue 工作台</text>
+
+    <rect x="360" y="178" width="210" height="100" rx="16" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="391" y="218" fill="#0F172A" font-size="22" font-weight="700">API Endpoints</text>
+    <text x="391" y="250" fill="#64748B" font-size="15">FastAPI 路由</text>
+
+    <rect x="650" y="178" width="210" height="100" rx="16" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="694" y="218" fill="#0F172A" font-size="22" font-weight="700">Services</text>
+    <text x="694" y="250" fill="#64748B" font-size="15">模块业务入口</text>
+
+    <rect x="940" y="154" width="260" height="148" rx="18" fill="#0F172A"/>
+    <text x="976" y="198" fill="#FFFFFF" font-size="22" font-weight="800">Agent Workflows</text>
+    <text x="976" y="232" fill="#CBD5E1" font-size="15">bank_statement</text>
+    <text x="976" y="258" fill="#CBD5E1" font-size="15">regulations</text>
+    <text x="976" y="284" fill="#CBD5E1" font-size="15">document_diff</text>
+
+    <path d="M280 228H348" stroke="#64748B" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M570 228H638" stroke="#64748B" stroke-width="3" marker-end="url(#arrow)"/>
+    <path d="M860 228H928" stroke="#64748B" stroke-width="3" marker-end="url(#arrow)"/>
+
+    <rect x="214" y="382" width="250" height="88" rx="16" fill="#ECFDF5" stroke="#A7F3D0"/>
+    <text x="242" y="420" fill="#065F46" font-size="20" font-weight="700">config/*.toml</text>
+    <text x="242" y="448" fill="#047857" font-size="15">端口、路径、功能开关</text>
+
+    <rect x="514" y="382" width="250" height="88" rx="16" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="542" y="420" fill="#1D4ED8" font-size="20" font-weight="700">mock_data.py</text>
+    <text x="542" y="448" fill="#2563EB" font-size="15">公开演示数据</text>
+
+    <rect x="814" y="382" width="250" height="88" rx="16" fill="#FFF7ED" stroke="#FED7AA"/>
+    <text x="842" y="420" fill="#9A3412" font-size="20" font-weight="700">Adapter Boundary</text>
+    <text x="842" y="448" fill="#C2410C" font-size="15">可替换 OCR / 模型 / 存储</text>
+
+    <path d="M340 382V326C340 306 356 294 376 294H1040C1060 294 1070 316 1070 316" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+    <path d="M640 382V326C640 306 656 294 676 294H1040C1060 294 1070 316 1070 316" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+    <path d="M940 382V326C940 306 956 294 976 294H1070" stroke="#94A3B8" stroke-width="2" stroke-dasharray="8 8"/>
+  </g>
+</svg>
