@@ -1,0 +1,43 @@
+[app]
+name = "open-agent-workbench"
+version = "0.1.0"
+environment = "demo"
+api_prefix = "/api/v1"
+log_level = "info"
+cors_origins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+]
+
+[server]
+backend_host = "0.0.0.0"
+backend_port = 8001
+frontend_port = 5173
+
+[features]
+enable_upload = false
+enable_background_worker = false
+enable_external_services = false
+
+[market]
+mode = "mock"
+page_size = 20
+
+[bank_statement]
+mode = "mock"
+enable_upload = false
+enable_worker = false
+max_demo_pages = 6
+
+[regulations]
+mode = "mock"
+enable_compare_agent = false
+
+[document_diff]
+mode = "mock"
+enable_history = true
+
+[storage]
+provider = "local"
+data_dir = "/app/data"
+log_dir = "/app/logs"

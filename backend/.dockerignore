@@ -1,0 +1,7 @@
+.venv
+__pycache__
+*.pyc
+.ruff_cache
+.uv-cache
+logs
+*.log

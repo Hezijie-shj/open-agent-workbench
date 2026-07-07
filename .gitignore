@@ -1,0 +1,12 @@
+.env
+.venv/
+node_modules/
+dist/
+.ruff_cache/
+backend/.uv-cache/
+logs/
+data/
+*.log
+*.tsbuildinfo
+__pycache__/
+*.pyc

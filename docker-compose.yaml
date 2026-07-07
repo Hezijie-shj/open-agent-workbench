@@ -1,0 +1,41 @@
+name: ${COMPOSE_PROJECT_NAME:-open-agent-workbench}
+
+x-backend-env: &backend-env
+  APP_ENV: ${APP_ENV:-demo}
+  CONFIG_PATH: ${CONFIG_PATH:-/app/config/config.toml}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  PYTHONPATH: /app
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: open-agent-workbench-backend:${APP_ENV:-demo}
+    environment:
+      <<: *backend-env
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/v1/market/agents', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: open-agent-workbench-frontend:${APP_ENV:-demo}
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
