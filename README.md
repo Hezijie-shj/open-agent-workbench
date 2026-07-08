@@ -196,6 +196,10 @@ docker compose --env-file .env.example config --quiet
 - 如果要接入真实服务，建议只替换 `backend/app/platform` 下的 adapter。
 - Prompt、OCR、报告和存储等扩展方式见 [docs/extension-points.md](docs/extension-points.md)。
 
+## Design Note
+
+这个项目的流程拆分和 adapter 分层思路来自个人对 SaaS 后端文件类任务的整理与抽象，不基于某个现成开源项目模板或外部项目代码。仓库中的示例数据、流程命名和页面内容均为本地 demo 设计，用于展示后端 workflow 的组织方式。
+
 ## Contact
 
 如果你对流程编排、文档解析、OCR/LLM adapter 接入、业务规则建模或本地部署有进一步交流需求，可以联系：
