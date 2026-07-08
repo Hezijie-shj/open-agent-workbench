@@ -76,7 +76,7 @@
           </div>
           <div>
             <strong>本地运行</strong>
-            <span>不依赖私有外部服务</span>
+            <span>不依赖外部服务</span>
           </div>
         </section>
       </main>

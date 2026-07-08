@@ -1,6 +1,6 @@
 # Workflow Notes
 
-这份文档记录 Open Agent Workbench 的后端 workflow 设计。它不是完整业务系统说明书，而是一个本地可运行的工程骨架：用 mock 数据模拟文件处理、模型调用、任务状态、复核和报告输出。
+这份文档记录 Open Agent Workbench 的后端 workflow 设计。项目使用 mock 数据模拟文件处理、模型调用、任务状态、复核和报告输出，便于本地启动和二次开发。
 
 ## 总体结构
 
@@ -144,10 +144,10 @@ GET  /api/v1/document_diff/review-records
 GET  /api/v1/document_diff/audit-summary
 ```
 
-## Public Demo Boundary
+## Demo Boundary
 
 - 使用 mock 数据，不提交真实文件。
 - 使用本地内存状态，不依赖数据库。
 - 使用本地 adapter，不依赖外部 OCR、模型、对象存储或队列。
 - 返回结构化 workflow，便于前端展示和后续替换。
-- 真实部署时建议从 `platform` 层开始替换实现。
+- 接入其他基础设施时建议从 `platform` 层开始替换实现。
