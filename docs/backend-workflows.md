@@ -1,419 +1,153 @@
-# Backend Workflow Design
+# Workflow Notes
 
-This project is a backend-oriented SaaS workflow demo. The frontend is intentionally lightweight: it exists to trigger APIs, display state changes, and make the backend workflow easy to inspect. The core value is in the backend service boundaries, workflow states, and public-safe adapter design.
+这份文档记录 Open Agent Workbench 的后端 workflow 设计。它不是完整业务系统说明书，而是一个本地可运行的工程骨架：用 mock 数据模拟文件处理、模型调用、任务状态、复核和报告输出。
 
-All data is mock data. The repository does not include external SDKs, real storage, queues, databases, credentials, internal endpoints, or business records.
-
-## Architecture
+## 总体结构
 
 ```text
-frontend views
-  -> FastAPI endpoints
-    -> service layer
-      -> backend/app/agents/*
-        -> mock data and local workflow adapters
+frontend
+  -> api endpoints
+    -> services
+      -> agents
+        -> platform adapters
+          -> mock data
 ```
 
-The backend keeps the same kind of layering used in a SaaS agent system:
+核心约定：
 
-- API endpoints expose workflow actions and status queries.
-- Services provide module-level business methods.
-- Agents hold the business workflow and return structured results.
-- Configuration lives under `config/*.toml`.
+- `api/endpoints` 负责暴露 HTTP 接口。
+- `services` 负责模块级业务入口。
+- `agents` 负责编排具体 workflow。
+- `platform` 模拟文件、OCR、模型、存储、队列、仓储、审计和报告等基础设施。
+- `mock_data.py` 提供公开演示数据。
 
-## Public Engineering Skeleton
+## Platform Adapters
 
-The repository includes a public-safe backend infrastructure skeleton under `backend/app/platform`.
-
-| Component | Responsibility |
+| Adapter | 说明 |
 | --- | --- |
-| `file_pipeline.py` | Upload metadata, archive extraction, PDF page splitting, page rendering, blank/error page classification. |
-| `ocr.py` | OCR text blocks, bounding boxes, confidence values, text cleanup. |
-| `model_gateway.py` | Prompt name tracking, model call simulation, retry metadata, sensitive-output fallback. |
-| `parsers.py` | CSV/JSON parsing, field normalization, amount and balance validation. |
-| `repository.py` | In-memory task records, transaction rollback, pagination, filters, state machine, review records. |
-| `queue.py` | Local queue and async-worker behavior simulation. |
-| `storage.py` | Local object metadata, checksums, storage keys. |
-| `audit.py` | Tenant context, audit events, usage counters, billing placeholder. |
-| `reporting.py` | Report metadata, template descriptor, JSON/DOCX/PDF download descriptors. |
+| `file_pipeline.py` | 上传元数据、压缩包展开、PDF 拆页、页面渲染、页面分类 |
+| `ocr.py` | OCR 文本块、坐标框、置信度、文本清洗 |
+| `model_gateway.py` | 模型任务名称、重试记录、结构化输出和兜底策略 |
+| `parsers.py` | CSV/JSON 解析、字段标准化、金额校验 |
+| `repository.py` | 内存状态机、事务回滚、分页筛选、复核记录 |
+| `queue.py` | 本地队列和 worker 行为模拟 |
+| `storage.py` | 对象 key、checksum、content type 等元数据 |
+| `audit.py` | 审计日志、租户上下文、调用计数 |
+| `reporting.py` | 报告模板描述和下载地址描述 |
 
-These components deliberately avoid real OCR vendors, model gateways, object storage, database credentials, internal hosts, or business files. They show where those adapters would live in a real SaaS deployment.
+这些 adapter 默认不连接外部服务。实际项目中可以保留上层接口和 workflow，只替换 adapter 实现。
 
-## Agent 1: Bank Statement Analysis
+## Workflow A: Statement PDF
 
-Module path:
-
-```text
-backend/app/agents/bank_statement/service.py
-backend/app/api/endpoints/bank_statement.py
-```
-
-This agent models a bank-statement SaaS workflow: upload, full PDF recognition, single-page recognition, review, report generation, report details, and sensitive-output fallback.
-
-### Engineering Pipeline
-
-Endpoint:
+接口入口：
 
 ```text
 POST /api/v1/bank_statement/projects/{project_id}/engineering-pipeline
 ```
 
-Flow:
+流程：
 
 ```text
-upload statement archive
-  -> store object metadata and checksum
-  -> extract archive into PDF/CSV children
-  -> split PDF into pages
-  -> render page images
-  -> classify blank/error pages
-  -> extract OCR blocks and bounding boxes
-  -> run structured model task with retry metadata
-  -> parse CSV/JSON rows
-  -> normalize amount fields
-  -> validate balance continuity
-  -> run sensitive-output fallback
-  -> persist task state and review record
-  -> build report download descriptors
-  -> write audit event and usage counter
+upload file
+  -> object metadata
+  -> archive extraction
+  -> PDF pages
+  -> page images
+  -> OCR blocks
+  -> structured rows
+  -> amount checks
+  -> fallback handling
+  -> task state
+  -> review record
+  -> report metadata
 ```
 
-Extra endpoints:
+辅助接口：
 
 ```text
 POST /api/v1/bank_statement/projects/upload-task
+GET  /api/v1/bank_statement/projects/{project_id}/single-page-recognition
+GET  /api/v1/bank_statement/projects/{project_id}/sensitive-fallback
 GET  /api/v1/bank_statement/workflow-tasks
 GET  /api/v1/bank_statement/review-records
 GET  /api/v1/bank_statement/audit-summary
 ```
 
-### Full PDF Flow
+## Workflow B: Rule Document Compare
 
-Endpoint:
-
-```text
-GET /api/v1/bank_statement/projects/{project_id}/full-pdf-recognition
-```
-
-Flow:
-
-```text
-PDF input
-  -> split PDF pages
-  -> run single-page recognition for each page
-  -> merge recognized rows
-  -> mark empty/error pages
-  -> run continuity and balance checks
-  -> return page summary and row count
-```
-
-Public demo behavior:
-
-- Uses mock page data.
-- Returns workflow steps with `completed`, `empty`, and fallback flags.
-- Does not call external OCR, model gateways, object storage, queues, or databases.
-
-### Single Page Flow
-
-Endpoint:
-
-```text
-GET /api/v1/bank_statement/projects/{project_id}/single-page-recognition?page=1
-```
-
-Flow:
-
-```text
-PDF page
-  -> render target page image
-  -> extract OCR text blocks
-  -> generate structured CSV-style rows
-  -> detect sensitive-output interruption risk
-  -> backfill text from local OCR block references
-  -> bind source ids and bounding boxes
-  -> return structured rows for frontend review
-```
-
-Returned fields include page metadata, transaction rows, source ids, bounding boxes, confidence, issue flags, and fallback status.
-
-### Sensitive Output Fallback
-
-Endpoint:
-
-```text
-GET /api/v1/bank_statement/projects/{project_id}/sensitive-fallback?page=1
-```
-
-Flow:
-
-```text
-sensitive field risk
-  -> output block references instead of sensitive text
-  -> recover text locally from OCR block mapping
-  -> preserve source traceability
-  -> return safe intermediate output and recovered row count
-```
-
-The public version demonstrates the strategy without real sensitive content.
-
-### Review And Report
-
-Endpoints:
-
-```text
-POST   /api/v1/bank_statement/projects/demo
-POST   /api/v1/bank_statement/projects/{project_id}/reviewed
-DELETE /api/v1/bank_statement/projects/{project_id}
-GET    /api/v1/bank_statement/projects/{project_id}/report
-GET    /api/v1/bank_statement/projects/{project_id}/report/details?label=...
-```
-
-These endpoints support task creation, review state changes, deletion, report overview, and drawer-style transaction details.
-
-## Agent 2: Regulation Document Comparison
-
-Module path:
-
-```text
-backend/app/agents/regulations/service.py
-backend/app/api/endpoints/regulations.py
-```
-
-This agent models a regulation/policy comparison workflow: source document loading, knowledge-base comparison documents, task creation, document comparison, result persistence, text matching, and highlight fallback.
-
-### Engineering Pipeline
-
-Endpoint:
+接口入口：
 
 ```text
 POST /api/v1/regulations/tasks/{task_id}/engineering-pipeline
 ```
 
-Flow:
+流程：
 
 ```text
-upload source regulation
-  -> store source metadata and checksum
-  -> load local rule-library files
-  -> extract PDF/DOCX/TXT paragraphs
-  -> run semantic comparison task with retry metadata
-  -> parse JSON risk items
-  -> normalize clause, risk level, suggestion fields
-  -> locate matching text and highlight ranges
-  -> repair truncated or weak matches through fallback search
-  -> persist task state and review record
-  -> build risk report descriptors
-  -> write audit event and usage counter
+upload source document
+  -> load local rule files
+  -> extract paragraphs
+  -> semantic compare
+  -> normalize risk items
+  -> locate matched text
+  -> fallback search
+  -> task state
+  -> review record
+  -> report metadata
 ```
 
-Extra endpoints:
+辅助接口：
 
 ```text
 POST /api/v1/regulations/tasks/upload-task
+GET  /api/v1/regulations/tasks/{task_id}/workflow
+GET  /api/v1/regulations/tasks/{task_id}/single-document-compare
+GET  /api/v1/regulations/tasks/{task_id}/text-match-fallback
 GET  /api/v1/regulations/workflow-tasks
 GET  /api/v1/regulations/review-records
 GET  /api/v1/regulations/audit-summary
 ```
 
-### Full Regulation Compare Flow
+## Workflow C: Contract Version Diff
 
-Endpoint:
-
-```text
-GET /api/v1/regulations/tasks/{task_id}/workflow
-```
-
-Flow:
-
-```text
-source regulation document
-  -> download or load source file
-  -> load comparison documents from knowledge base
-  -> create comparison task record
-  -> extract PDF/DOCX/TXT text
-  -> compare each document
-  -> normalize risk items and clause differences
-  -> save comparison result
-  -> generate highlight metadata
-```
-
-Public demo behavior:
-
-- Uses local mock documents and mock comparison results.
-- Keeps a real-world-style workflow and response shape.
-- Excludes knowledge-base APIs, object storage, and external comparison services.
-
-### Single Document Compare Flow
-
-Endpoint:
-
-```text
-GET /api/v1/regulations/tasks/{task_id}/single-document-compare?compare_file=rule-library-demo.pdf
-```
-
-Flow:
-
-```text
-one source document
-  -> one comparison document
-  -> extract both texts
-  -> semantic comparison
-  -> normalize clause, risk level, and suggestion
-```
-
-This mirrors the single compare unit used inside the full workflow.
-
-### Text Match And Truncation Fallback
-
-Endpoint:
-
-```text
-GET /api/v1/regulations/tasks/{task_id}/text-match-fallback
-```
-
-Flow:
-
-```text
-target text
-  -> extract document paragraphs
-  -> run fast similarity recall
-  -> return perfect match when available
-  -> otherwise return highest-similarity paragraph
-  -> extend truncated cross-paragraph match
-  -> generate page or paragraph highlight metadata
-```
-
-This demonstrates how the backend handles weak matches and truncated text snippets before the frontend renders highlights.
-
-## Agent 3: Document Difference
-
-Module path:
-
-```text
-backend/app/agents/document_diff/service.py
-backend/app/api/endpoints/document_diff.py
-```
-
-This agent models a document-diff workflow: create comparison task, save history, poll task status, request preview authorization, load diff detail, and run a local line-level fallback diff.
-
-### Engineering Pipeline
-
-Endpoint:
+接口入口：
 
 ```text
 POST /api/v1/document_diff/engineering-pipeline
 ```
 
-Flow:
+流程：
 
 ```text
-upload standard and compare documents
-  -> store object metadata and checksums
-  -> validate file roles and formats
-  -> extract document text and line counts
-  -> create comparison task
-  -> enqueue status polling job
-  -> poll task status and sync history
-  -> summarize clause-level differences
-  -> generate preview link descriptor
-  -> run local line-diff fallback
-  -> persist task state and review record
-  -> build report download descriptors
-  -> write audit event and usage counter
+upload standard and compare docs
+  -> validate file roles
+  -> extract text
+  -> create compare task
+  -> queue status polling
+  -> sync result
+  -> preview link
+  -> local line diff
+  -> task state
+  -> review record
+  -> report metadata
 ```
 
-Extra endpoints:
+辅助接口：
 
 ```text
 POST /api/v1/document_diff/history/upload-task
+GET  /api/v1/document_diff/history/{task_id}/status
+GET  /api/v1/document_diff/history/{task_id}/preview
+GET  /api/v1/document_diff/history/{task_id}/local-line-diff
 GET  /api/v1/document_diff/workflow-tasks
 GET  /api/v1/document_diff/review-records
 GET  /api/v1/document_diff/audit-summary
 ```
 
-### Create Comparison Task
+## Public Demo Boundary
 
-Endpoint:
-
-```text
-POST /api/v1/document_diff/compare-documents
-```
-
-Flow:
-
-```text
-standard document and comparison documents
-  -> validate file metadata
-  -> create comparison task
-  -> save history record
-  -> return task id and processing state
-```
-
-The public version creates an in-memory mock task.
-
-### Status Polling
-
-Endpoint:
-
-```text
-GET /api/v1/document_diff/history/{task_id}/status
-```
-
-Flow:
-
-```text
-task id
-  -> query task status
-  -> sync history state
-  -> load diff detail when completed
-```
-
-This mirrors asynchronous SaaS task polling without requiring a real worker or external comparator.
-
-### Preview Authorization
-
-Endpoint:
-
-```text
-GET /api/v1/document_diff/history/{task_id}/preview
-```
-
-Flow:
-
-```text
-task id
-  -> request preview grant
-  -> build preview URL
-```
-
-The demo returns a local preview URL shape.
-
-### Local Line Diff
-
-Endpoint:
-
-```text
-GET /api/v1/document_diff/history/{task_id}/local-line-diff
-```
-
-Flow:
-
-```text
-left document text
-  -> right document text
-  -> line-level diff
-  -> similarity score
-  -> added/deleted line counts
-```
-
-This is the public-safe local fallback for inspecting document differences without external services.
-
-## Public Release Boundary
-
-This repository is suitable as a public backend workflow demo if these boundaries are kept:
-
-- Keep all data as mock/sample data.
-- Do not commit real files, real accounts, private URLs, keys, credentials, or logs.
-- Keep `.env`, `logs/`, `data/`, `dist/`, `node_modules/`, `.venv/`, Python caches, and local tool caches ignored.
-- Treat the frontend as an operational demo surface, not a polished product UI.
-- Replace mock adapters with real storage, queues, OCR, model gateway, and database only in controlled deployments.
+- 使用 mock 数据，不提交真实文件。
+- 使用本地内存状态，不依赖数据库。
+- 使用本地 adapter，不依赖外部 OCR、模型、对象存储或队列。
+- 返回结构化 workflow，便于前端展示和后续替换。
+- 真实部署时建议从 `platform` 层开始替换实现。

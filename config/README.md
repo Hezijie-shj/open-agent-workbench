@@ -16,4 +16,4 @@
 - `features.enable_external_services = false`: 默认不启用任何外部私有服务。
 - `storage.data_dir` / `storage.log_dir`: 容器内数据和日志目录, Compose 会挂载到宿主机 `./data` 和 `./logs`。
 
-后续接入真实业务时, 可以继续在这里补数据库、文件存储、解析服务和 worker 配置。不要把生产密钥、内部地址、真实账号或真实业务数据提交到公开仓库。
+后续接入真实业务时, 可以继续在这里补数据库、文件存储、解析服务和 worker 配置。不要把敏感配置、真实账号或真实业务数据提交到公开仓库。
