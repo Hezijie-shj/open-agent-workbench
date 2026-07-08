@@ -11,7 +11,7 @@
   <img alt="Data" src="https://img.shields.io/badge/Data-local%20mock-7c3aed" />
 </p>
 
-面向 SaaS 业务场景的后端金融行业 Agent 流程演示项目，覆盖大部分银行账单 PDF 格式的解析、文档比对、合同比对，包含任务编排、状态流转、结果复核、报告输出、脱敏兜底与 Docker 本地部署示例。
+面向 SaaS 业务场景的后端 Agent 流程演示项目，覆盖账单 PDF 解析、规则文本比对、版本差异比对，包含任务编排、状态流转、结果复核、报告输出、脱敏兜底与 Docker 本地部署示例。
 
 这个项目更偏**后端工程方案展示**，前端只是一个轻量工作台，用来触发接口、查看任务状态和浏览 mock 结果。
 
@@ -27,8 +27,8 @@
 | 模块 | 说明 |
 | --- | --- |
 | 账单 PDF 解析 | 演示文件入库、PDF 拆页、OCR 坐标、结构化行识别、金额校验、问题页和报告输出 |
-| 规则文档比对 | 演示源文档与规则库文档的语义比对、风险项归一化、文本定位和兜底匹配 |
-| 合同版本比对 | 演示标准文档与多个版本文档的差异任务、状态轮询、预览链接和本地 diff |
+| 规则文本比对 | 演示源文本与参考文本的语义比对、风险项归一化、文本定位和兜底匹配 |
+| 版本差异比对 | 演示基准文档与多个版本文档的差异任务、状态轮询、预览链接和本地 diff |
 | 流程市场 | 用一个简单入口展示可进入的 workflow demo |
 
 ## 架构预览
@@ -146,13 +146,13 @@ API endpoints
 | 场景 | 接口 |
 | --- | --- |
 | 流程市场 | `GET /api/v1/market/agents` |
-| 账单任务列表 | `GET /api/v1/bank_statement/projects` |
-| 账单完整流程 | `POST /api/v1/bank_statement/projects/{project_id}/engineering-pipeline` |
-| 账单单页识别 | `GET /api/v1/bank_statement/projects/{project_id}/single-page-recognition?page=1` |
-| 规则文档任务 | `GET /api/v1/regulations/tasks` |
-| 规则文档完整流程 | `POST /api/v1/regulations/tasks/{task_id}/engineering-pipeline` |
-| 合同差异历史 | `GET /api/v1/document_diff/history` |
-| 合同差异完整流程 | `POST /api/v1/document_diff/engineering-pipeline` |
+| PDF 任务列表 | `GET /api/v1/bank_statement/projects` |
+| PDF 完整流程 | `POST /api/v1/bank_statement/projects/{project_id}/engineering-pipeline` |
+| 单页识别 | `GET /api/v1/bank_statement/projects/{project_id}/single-page-recognition?page=1` |
+| 文本比对任务 | `GET /api/v1/regulations/tasks` |
+| 文本比对完整流程 | `POST /api/v1/regulations/tasks/{task_id}/engineering-pipeline` |
+| 差异历史 | `GET /api/v1/document_diff/history` |
+| 差异完整流程 | `POST /api/v1/document_diff/engineering-pipeline` |
 
 ## 目录结构
 
