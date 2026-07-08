@@ -139,6 +139,8 @@ API endpoints
 
 更细的流程说明见 [docs/backend-workflows.md](docs/backend-workflows.md)。
 
+公开版范围说明见 [docs/public-scope.md](docs/public-scope.md)。其中说明了为什么没有放入真实提示词、OCR 供应商目录、私有 SDK、报告模板和真实业务规则，以及私有部署时建议替换的位置。
+
 ## 常用接口
 
 | 场景 | 接口 |
@@ -192,6 +194,7 @@ docker compose --env-file .env.example config --quiet
 - 不包含真实业务文件、真实账号、真实客户信息或敏感配置。
 - 默认不连接外部 OCR、模型网关、对象存储、数据库或消息队列。
 - 如果要接入真实服务，建议只替换 `backend/app/platform` 下的 adapter。
+- 真实提示词、OCR 目录、供应商配置、报告模板和私有业务规则不属于公开版内容，详见 [docs/public-scope.md](docs/public-scope.md)。
 
 ## License
 
