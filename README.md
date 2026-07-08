@@ -196,6 +196,12 @@ docker compose --env-file .env.example config --quiet
 - 如果要接入真实服务，建议只替换 `backend/app/platform` 下的 adapter。
 - Prompt、OCR、报告和存储等扩展方式见 [docs/extension-points.md](docs/extension-points.md)。
 
+## Contact
+
+如果你对流程编排、文档解析、OCR/LLM adapter 接入、业务规则建模或本地部署有进一步交流需求，可以联系：
+
+- Email: 1070410058@qq.com
+
 ## License
 
 当前仓库暂未声明开源 License。使用或二次分发前请自行确认授权边界。
